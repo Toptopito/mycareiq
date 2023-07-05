@@ -13,7 +13,6 @@ test = False
 
 
 def display_cheapest_hospitals(cheapest_5_hospitals):
-    # comment for github demo
     return None
 
 
