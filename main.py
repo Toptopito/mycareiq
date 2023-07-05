@@ -2,7 +2,12 @@
 
 import cgi
 import pandas as pd
+from pyzipcode import ZipCodeDatabase
+# import csv
+# from geopy.distance import geodesic
 
+# remember to remove test and debug codes in productions
+test = False
 
 #!/usr/bin/env python3
 
@@ -17,7 +22,44 @@ def display_cheapest_insurance(cheapest_5_insurance):
 
 # find list of zip codes and county fips codes within a radius
 def find_zip_codes_and_county_within_radius(zip_code, radius_miles):
-    return [],[]
+    # constant
+    zipdb_file_path = "./files/uszips.csv"
+    
+    # Create a ZipCodeDatabase instance
+    zcdb = ZipCodeDatabase()
+
+    # Query for the entered zip code if it exists
+    try:
+        zcdb[zip_code]
+    except:
+        return [],[]
+
+    # # Open the CSV file containing zip codes and location data
+    # with open(zipdb_file_path, newline='') as csvfile:
+    #     reader = csv.DictReader(csvfile)
+
+    #     # Search for the nearest 5 zip codes in the CSV file
+    #     nearest_zipcodes = [zip_code]
+    #     for row in reader:
+    #         dist = geodesic((zip_obj.latitude, zip_obj.longitude), (float(row['lat']), float(row['lng']))).miles
+    #         if dist <= radius_miles and row['zip'] != zip_code:
+    #             nearest_zipcodes.append(row['zip'])
+
+    # Search for zip codes that are near (within a radius in miles) the given zip code
+    nearest_zipcodes = [z.zip for z in zcdb.get_zipcodes_around_radius(zip_code, radius_miles)]
+   
+    # find relevant county FIPS codes for nearest zip codes
+    df_zipdb = pd.read_csv(zipdb_file_path)
+    df_zipdb['zip'] = df_zipdb['zip'].astype(str)
+    df_zipdb_nearest = df_zipdb[df_zipdb['zip'].isin(nearest_zipcodes)]
+    
+    nearest_county_fips = df_zipdb_nearest['county_fips'].values.tolist()
+
+    # remove duplicate county FIPS then change back to list
+    nearest_county_fips = set(nearest_county_fips)
+    nearest_county_fips = list(nearest_county_fips)
+    
+    return nearest_zipcodes, nearest_county_fips
 
 
 def find_cheapest_5_hospitals(zip_codes_list):
@@ -47,7 +89,7 @@ def create_html_template():
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <!--[if lt IE 9]>
     <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script><![endif]-->    
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script><![endif]-->   
 </head>
 <body>
     <div class="container">
@@ -82,46 +124,59 @@ def create_result_html(cheapest_5_hospitals, cheapest_5_insurance):
 # Main CGI logic
 def main():
     # constants
-    radius_miles = 5
-
-    # Create an instance of FieldStorage
-    form = cgi.FieldStorage()
-
-    if "zip_code" in form:
-        # Get the zip code from the form
-        zip_code = form.getvalue("zip_code")
-
-        # Find zip codes and county fips codes within a 5-mile radius
-        zip_codes_list, county_fips_list = find_zip_codes_and_county_within_radius(zip_code, radius_miles)
-
-        # get the result cheapest hospitals and insurance for the entered zip code and surrounding areas
-        if len(zip_codes_list) > 0 and len(county_fips_list) > 0:
-            cheapest_5_hospitals = find_cheapest_5_hospitals(zip_codes_list)
-            cheapest_5_insurance = find_cheapest_5_insurance(county_fips_list)
-            
-            # display the results        
-            result_html = create_result_html(cheapest_5_hospitals, cheapest_5_insurance)
-
+    radius_miles = 5   
+    
+    if test: # tests codes here remove in production
+        zip_codes_list, county_fips_list = find_zip_codes_and_county_within_radius('22192', radius_miles)
+        
+        if len(zip_codes_list) == 0:
+            print("Invalid Zip Code!")
         else:
-            result_html = f"<h2>No matches found for zip code: {zip_code}</h2>"
-            
-        
-        # Create the final HTML response
-        response_html = create_html_template() % result_html
-
-        # Set the Content-Type header to HTML
-        print("Content-Type: text/html\n\n")
-        print()
-        print(response_html)
+            print(zip_codes_list, county_fips_list)
     else:
-        # Show the initial form
-        response_html = create_html_template() % ""
-        
-        # Set the Content-Type header to HTML
-        print("Content-Type: text/html\n\n")
-        print()
-        print(response_html)
+        # Create an instance of FieldStorage
+        form = cgi.FieldStorage()
 
+        if "zip_code" in form:
+            # Get the zip code from the form
+            zip_code = form.getvalue("zip_code")
+            
+            # Find zip codes and county fips codes within a 5-mile radius
+            zip_codes_list, county_fips_list = find_zip_codes_and_county_within_radius(zip_code, radius_miles)
+            
+            # get the result cheapest hospitals and insurance for the entered zip code and surrounding areas
+            if len(zip_codes_list) > 0 and len(county_fips_list) > 0:
+                
+                cheapest_5_hospitals = find_cheapest_5_hospitals(zip_codes_list)
+                cheapest_5_insurance = find_cheapest_5_insurance(county_fips_list)
+                
+                # display the results        
+                result_html = create_result_html(cheapest_5_hospitals, cheapest_5_insurance)
+                
+                # debug codes remove in production
+                result_html = f"<h2>List of zip codes: {zip_codes_list}</h2><br>"
+                result_html += f"<h2>List of county fips codes: {county_fips_list}</h2>"
+                           
+            else:
+                result_html = f"<h2>No matches found for zip code: {zip_code}</h2>"
+                    
+                    
+            # Create the final HTML response
+            response_html = create_html_template() % result_html
+                    
+            # Set the Content-Type header to HTML
+            print("Content-Type: text/html\n\n")
+            print()
+            print(response_html)
+        else:
+            # Show the initial form
+            response_html = create_html_template() % ""
+                        
+            # Set the Content-Type header to HTML
+            print("Content-Type: text/html\n\n")
+            print()
+            print(response_html)
 
+    
 if __name__ == "__main__":
     main()
