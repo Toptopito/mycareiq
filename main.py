@@ -27,7 +27,7 @@ def find_zip_codes_and_county_within_radius(zip_code, radius_miles):
     
     # Create a ZipCodeDatabase instance
     zcdb = ZipCodeDatabase()
-
+    
     # Query for the entered zip code if it exists
     try:
         zcdb[zip_code]
@@ -45,14 +45,22 @@ def find_zip_codes_and_county_within_radius(zip_code, radius_miles):
     #         if dist <= radius_miles and row['zip'] != zip_code:
     #             nearest_zipcodes.append(row['zip'])
 
+    # make sure zip code has 5 digits
+    zip_code = zip_code.rjust(5, '0')
+
     # Search for zip codes that are near (within a radius in miles) the given zip code
     nearest_zipcodes = [z.zip for z in zcdb.get_zipcodes_around_radius(zip_code, radius_miles)]
+    
+    # Remove leading zeroes in zip codes
+    for i in range(len(nearest_zipcodes)):
+        nearest_zipcodes[i] = int(nearest_zipcodes[i])
+        nearest_zipcodes[i] = str(nearest_zipcodes[i])
    
     # find relevant county FIPS codes for nearest zip codes
     df_zipdb = pd.read_csv(zipdb_file_path)
     df_zipdb['zip'] = df_zipdb['zip'].astype(str)
     df_zipdb_nearest = df_zipdb[df_zipdb['zip'].isin(nearest_zipcodes)]
-    
+    df_zipdb_nearest['county_fips'] = df_zipdb_nearest['county_fips'].astype(str)
     nearest_county_fips = df_zipdb_nearest['county_fips'].values.tolist()
 
     # remove duplicate county FIPS then change back to list
@@ -127,7 +135,7 @@ def main():
     radius_miles = 5   
     
     if test: # tests codes here remove in production
-        zip_codes_list, county_fips_list = find_zip_codes_and_county_within_radius('22192', radius_miles)
+        zip_codes_list, county_fips_list = find_zip_codes_and_county_within_radius('611', radius_miles)
         
         if len(zip_codes_list) == 0:
             print("Invalid Zip Code!")
@@ -140,7 +148,7 @@ def main():
         if "zip_code" in form:
             # Get the zip code from the form
             zip_code = form.getvalue("zip_code")
-            
+                      
             # Find zip codes and county fips codes within a 5-mile radius
             zip_codes_list, county_fips_list = find_zip_codes_and_county_within_radius(zip_code, radius_miles)
             
