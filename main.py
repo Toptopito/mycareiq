@@ -1,23 +1,22 @@
 #!"C:/Users/vladc/AppData/Local/Programs/Python/Python311/python.exe"
+#!/usr/bin/env python3
 
 import cgi
 import pandas as pd
 from pyzipcode import ZipCodeDatabase
-# import csv
-# from geopy.distance import geodesic
+
 
 # remember to remove test and debug codes in productions
 test = False
-
-#!/usr/bin/env python3
+debug = True
 
 
 def display_cheapest_hospitals(cheapest_5_hospitals):
-    return None
+    return ""
 
 
 def display_cheapest_insurance(cheapest_5_insurance):
-    return None
+    return ""
 
 
 # find list of zip codes and county fips codes within a radius
@@ -32,31 +31,23 @@ def find_zip_codes_and_county_within_radius(zip_code, radius_miles):
     try:
         zcdb[zip_code]
     except:
-        return [],[]
+        return [],[] # return empty lists to signify no matches
 
-    # # Open the CSV file containing zip codes and location data
-    # with open(zipdb_file_path, newline='') as csvfile:
-    #     reader = csv.DictReader(csvfile)
-
-    #     # Search for the nearest 5 zip codes in the CSV file
-    #     nearest_zipcodes = [zip_code]
-    #     for row in reader:
-    #         dist = geodesic((zip_obj.latitude, zip_obj.longitude), (float(row['lat']), float(row['lng']))).miles
-    #         if dist <= radius_miles and row['zip'] != zip_code:
-    #             nearest_zipcodes.append(row['zip'])
-
-    # make sure zip code has 5 digits
+    # make sure zip code has 5 digits as required by get_zipcodes_around_radius()
     zip_code = zip_code.rjust(5, '0')
 
     # Search for zip codes that are near (within a radius in miles) the given zip code
-    nearest_zipcodes = [z.zip for z in zcdb.get_zipcodes_around_radius(zip_code, radius_miles)]
+    try:
+        nearest_zipcodes = [z.zip for z in zcdb.get_zipcodes_around_radius(zip_code, radius_miles)]
+    except:
+        return [],[] # return empty lists to signify no matches
     
     # Remove leading zeroes in zip codes
     for i in range(len(nearest_zipcodes)):
         nearest_zipcodes[i] = int(nearest_zipcodes[i])
         nearest_zipcodes[i] = str(nearest_zipcodes[i])
    
-    # find relevant county FIPS codes for nearest zip codes
+    # create list of relevant county FIPS codes for nearest zip codes
     df_zipdb = pd.read_csv(zipdb_file_path)
     df_zipdb['zip'] = df_zipdb['zip'].astype(str)
     df_zipdb_nearest = df_zipdb[df_zipdb['zip'].isin(nearest_zipcodes)]
@@ -71,7 +62,26 @@ def find_zip_codes_and_county_within_radius(zip_code, radius_miles):
 
 
 def find_cheapest_5_hospitals(zip_codes_list):
-    return []
+    # constant
+    hospital_charges_path = "./files/Medicare_Inpatient_Hospital_by_Provider_and_Service_2021.csv"
+    
+    # list hospitals in the zip codes list
+    df_hospitals = pd.read_csv(hospital_charges_path)
+    df_hospitals['Rndrng_Prvdr_Zip5'] = df_hospitals['Rndrng_Prvdr_Zip5'].astype(str)
+    df_hospitals_nearest = df_hospitals[df_hospitals['Rndrng_Prvdr_Zip5'].isin(zip_codes_list)]
+    
+    if df_hospitals_nearest.empty:
+        return pd.DataFrame()
+    else:
+        # get average cost by hospital
+        df_hospitals_average_cost = df_hospitals_nearest.groupby(['Rndrng_Prvdr_CCN', 'Rndrng_Prvdr_Org_Name'])['Avg_Tot_Pymt_Amt'].mean()
+        
+        # sort then get top 5 most affordable
+        sorted_hospitals = df_hospitals_average_cost.sort_values()
+        cheapest_5_hospitals = sorted_hospitals.head(5)
+        return cheapest_5_hospitals
+        
+    return pd.DataFrame()
 
 
 def find_cheapest_5_insurance(county_fips_list):
@@ -129,18 +139,24 @@ def create_result_html(cheapest_5_hospitals, cheapest_5_insurance):
     
     return result_html
 
+
 # Main CGI logic
 def main():
     # constants
-    radius_miles = 5   
+    radius_miles = 15   
     
     if test: # tests codes here remove in production
-        zip_codes_list, county_fips_list = find_zip_codes_and_county_within_radius('611', radius_miles)
+        zip_codes_list, county_fips_list = find_zip_codes_and_county_within_radius('22192', radius_miles)
         
         if len(zip_codes_list) == 0:
             print("Invalid Zip Code!")
         else:
-            print(zip_codes_list, county_fips_list)
+            cheapest_5_hospitals = find_cheapest_5_hospitals(zip_codes_list)
+            
+            cheapest_5_hospitals_str = cheapest_5_hospitals.to_string()
+            print("5 most affordable hospitals:", cheapest_5_hospitals_str)
+
+            
     else:
         # Create an instance of FieldStorage
         form = cgi.FieldStorage()
@@ -157,14 +173,17 @@ def main():
                 
                 cheapest_5_hospitals = find_cheapest_5_hospitals(zip_codes_list)
                 cheapest_5_insurance = find_cheapest_5_insurance(county_fips_list)
+                               
+                # debug codes remove in production
+                if debug:
+                    result_html = f"<p>List of zip codes: {zip_codes_list}</p><br>"
+                    result_html += f"<p>List of county fips codes: {county_fips_list}</p><br>"
+                    if cheapest_5_hospitals.empty == False:
+                        result_html += f"<p>Cheapest 5 hospitals: {cheapest_5_hospitals}</p><br>"
                 
                 # display the results        
-                result_html = create_result_html(cheapest_5_hospitals, cheapest_5_insurance)
+                #result_html = create_result_html(cheapest_5_hospitals, cheapest_5_insurance)
                 
-                # debug codes remove in production
-                result_html = f"<h2>List of zip codes: {zip_codes_list}</h2><br>"
-                result_html += f"<h2>List of county fips codes: {county_fips_list}</h2>"
-                           
             else:
                 result_html = f"<h2>No matches found for zip code: {zip_code}</h2>"
                     
