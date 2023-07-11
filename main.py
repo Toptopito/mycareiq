@@ -1,22 +1,23 @@
 #!"C:/Users/vladc/AppData/Local/Programs/Python/Python311/python.exe"
 #!/usr/bin/env python3
 
-import cgi
-import pandas as pd
-from pyzipcode import ZipCodeDatabase
+import cgi # for python cgi programming
+import pandas as pd # to use dataframes for data processing
+from pyzipcode import ZipCodeDatabase # to generate zip codes within a radius
+import os
+import uuid
+
+# import matplotlib
+# matplotlib.use('Agg')
+# import matplotlib.pyplot as plt
+# import mpld3
+
+#from matplotlib.figure import Figure
 
 
 # remember to remove test and debug codes in productions
 test = False
 debug = True
-
-
-def display_cheapest_hospitals(cheapest_5_hospitals):
-    return ""
-
-
-def display_cheapest_insurance(cheapest_5_insurance):
-    return ""
 
 
 # find list of zip codes and county fips codes within a radius
@@ -71,21 +72,29 @@ def find_cheapest_5_hospitals(zip_codes_list):
     df_hospitals_nearest = df_hospitals[df_hospitals['Rndrng_Prvdr_Zip5'].isin(zip_codes_list)]
     
     if df_hospitals_nearest.empty:
-        return pd.DataFrame()
+        return pd.DataFrame() # empty dataframe
     else:
         # get average cost by hospital
-        df_hospitals_average_cost = df_hospitals_nearest.groupby(['Rndrng_Prvdr_CCN', 'Rndrng_Prvdr_Org_Name'])['Avg_Tot_Pymt_Amt'].mean()
+        df_hospitals_average_cost = df_hospitals_nearest.groupby(['Rndrng_Prvdr_Org_Name'])['Avg_Tot_Pymt_Amt'].mean()
         
         # sort then get top 5 most affordable
         sorted_hospitals = df_hospitals_average_cost.sort_values()
         cheapest_5_hospitals = sorted_hospitals.head(5)
         return cheapest_5_hospitals
         
-    return pd.DataFrame()
+    return pd.DataFrame() # empty dataframe
 
 
 def find_cheapest_5_insurance(county_fips_list):
     return []
+
+
+def display_cheapest_hospitals(cheapest_5_hospitals):
+    return ""
+
+
+def display_cheapest_insurance(cheapest_5_insurance):
+    return ""
 
 
 # HTML template
@@ -153,8 +162,14 @@ def main():
         else:
             cheapest_5_hospitals = find_cheapest_5_hospitals(zip_codes_list)
             
-            cheapest_5_hospitals_str = cheapest_5_hospitals.to_string()
-            print("5 most affordable hospitals:", cheapest_5_hospitals_str)
+            # if cheapest_5_hospitals.empty == False:
+            #     #plot
+                # fig = plt.figure()
+                # cheapest_5_hospitals.sort_values(ascending=False).plot.barh(x='Rndrng_Prvdr_Org_Name', title='Most affordable hospitals', color='blue')
+                # plt.xlabel('Average charges in USD')
+                # plt.ylabel('Provider')
+                # tempfilename = "./tempfiles/" + str(uuid.uuid4()) + ".png"
+                # plt.savefig(tempfilename, bbox_inches='tight')
 
             
     else:
@@ -180,6 +195,7 @@ def main():
                     result_html += f"<p>List of county fips codes: {county_fips_list}</p><br>"
                     if cheapest_5_hospitals.empty == False:
                         result_html += f"<p>Cheapest 5 hospitals: {cheapest_5_hospitals}</p><br>"
+                        result_html += '<img src=\"./tempfiles/39c3b0f8-502b-4cf4-b660-a1d5abc0ff8d.png\">'
                 
                 # display the results        
                 #result_html = create_result_html(cheapest_5_hospitals, cheapest_5_insurance)
