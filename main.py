@@ -1,7 +1,6 @@
 #!"C:/Users/vladc/AppData/Local/Programs/Python/Python311/python.exe"
 #!/usr/bin/env python3
 
-# import cgi # for python cgi programming
 from flask import Flask, render_template, request # for flask web server
 import os # delete graphs after after they have been displayed
 import glob # to delete graphs using a pattern
@@ -27,6 +26,8 @@ def mycareiq():
     radius_miles = 15
 
     # clear directory of .png files
+    # watchout this might cause a bug in production for simultaneous usage 
+    # can be replaced by a server cleanup script
     images = glob.glob('./static/images/*.png', recursive=True)
     
     for image in images:
