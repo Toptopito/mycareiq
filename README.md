@@ -17,3 +17,6 @@ Test Environment Creation:
     set FLASK_ENV=development
     flask run
 12. Go to this URL in your browser: http://127.0.0.1:5000/
+
+After you finished testing, type the following to deactivate the virtual environment:
+deactivate
