@@ -5,7 +5,7 @@ Test Environment Creation:
 1. Clone the repository in your development computer. We will refer to the folder where you cloned the repository as "dev folder"
 3. In the "dev folder", go to the 'mycareiq" folder and create a folder named "files"
 4. In the "files" folder, copy the following datasets: Individual_Market_Medical.csv, Medicare_Inpatient_Hospital_by_Provider_and_Service_2021.csv, and uszips.csv (files are too big to be uploaded in the repository)
-5. Install the following libraries using pip install: pandas, pyzipcode, flask, virtualenv
+5. Install the following libraries using pip install: pandas, pyzipcode, flask, virtualenv, os, glob
 6. In main.py change the first line to the location of python.exe in your computer
 8. Using a terminal, go to the "dev folder".
     ---- This will not work in a Powershell for Windows it has to be using a terminal
