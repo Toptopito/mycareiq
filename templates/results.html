@@ -1,0 +1,13 @@
+{% extends 'template.html' %}
+
+{% block content %}
+	{% if hospital_graph %}
+		<img src="{{ url_for('static', filename=hospital_graph) }}"><br><br>
+	{% endif %}
+	{% if insurance_graph %}
+		<img src="{{ url_for('static', filename=insurance_graph) }}"><br><br>
+	{% endif %}
+	{% if message %}
+		<h2>{{ message }}</h2><br><br>
+	{% endif %}
+{% endblock %}
