@@ -11,11 +11,11 @@ Test Environment Creation:
     ---- This will not work in a Powershell for Windows it has to be using a terminal
     ---- for Windows press Windows+R then type cmd then press enter
 9.  In the Windows terminal type:
-    python -m venv venv
-    >> venv\Scripts\activate \n
-    >> set FLASK_APP=main \n
-    >> set FLASK_ENV=development \n
-    >> flask run
+    - python -m venv venv
+    - venv\Scripts\activate
+    - set FLASK_APP=main
+    - set FLASK_ENV=development
+    - flask run
 12. Go to this URL in your browser: http://127.0.0.1:5000/
 
 After you finished testing, type the following to deactivate the virtual environment:
