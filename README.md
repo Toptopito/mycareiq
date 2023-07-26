@@ -12,9 +12,9 @@ Test Environment Creation:
     ---- for Windows press Windows+R then type cmd then press enter
 9.  In the Windows terminal type:
     python -m venv venv
-    >> venv\Scripts\activate
-    >> set FLASK_APP=main
-    >> set FLASK_ENV=development
+    >> venv\Scripts\activate \n
+    >> set FLASK_APP=main \n
+    >> set FLASK_ENV=development \n
     >> flask run
 12. Go to this URL in your browser: http://127.0.0.1:5000/
 
