@@ -23,7 +23,7 @@ def mycareiq():
     hospital_graph = ''
     insurance_graph = ''
     message = ''
-    radius_miles = 15
+    radius_miles = 15 # set to the range miles within a given zip code to search for hospitals
 
     # clear directory of .png files
     # watchout this might cause a bug in production for simultaneous usage 
