@@ -5,7 +5,6 @@ from flask import Flask, render_template, request # for flask web server
 import os # delete graphs after after they have been displayed
 import glob # to delete graphs using a pattern
 
-
 # import functions from other python files
 from data_processing import find_zip_codes_and_county_within_radius, find_cheapest_5_hospitals, find_cheapest_5_insurance
 from plotting import display_cheapest_hospitals, display_cheapest_insurance
