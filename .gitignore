@@ -2,3 +2,6 @@
 files/uszips.csv
 files/Individual_Market_Medical.csv
 files/Medicare_Inpatient_Hospital_by_Provider_and_Service_2021.csv
+*.pyc
+*.pyc
+*.png
